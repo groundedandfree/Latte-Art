@@ -4,28 +4,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Grounded and Free Barista Pro</title>
     <style>
-        :root { --site-red: #a33b39; --cream: #f9f4e8; --coffee: #4e342e; --gold: #e9b44c; --milk: #ffffff; }
-        body { text-align: center; font-family: sans-serif; background-color: var(--cream); color: var(--coffee); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; touch-action: none; }
+        :root { --site-red: #a33b39; --cream: #f9f4e8; --coffee: #4e342e; --steel: #ced4da; --milk: #ffffff; }
+        body { text-align: center; font-family: sans-serif; background-color: var(--cream); color: var(--coffee); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; touch-action: none; overflow: hidden; }
         .game-container { width: 100%; max-width: 350px; margin: 0 auto; }
         h1 { font-size: 1.8em; margin: 5px 0; color: var(--site-red); text-transform: uppercase; }
         .brand { font-weight: bold; color: var(--coffee); margin-top: 10px; letter-spacing: 1px; }
-        canvas { border: 6px solid var(--site-red); background: #fff; cursor: crosshair; border-radius: 20px; box-shadow: 0 8px 0 #7a2c2a; width: 100%; height: auto; }
+        canvas { border: 6px solid var(--site-red); background: #222; border-radius: 20px; box-shadow: 0 8px 0 #7a2c2a; width: 100%; height: auto; touch-action: none; }
         #msg { font-weight: bold; font-size: 1.1em; margin-top: 15px; min-height: 25px; }
-        button { background-color: var(--site-red); color: white; border: none; padding: 12px 24px; font-size: 1em; border-radius: 30px; margin-top: 10px; cursor: pointer; display: none; }
-        .hidden { display: none; }
+        button { background-color: var(--site-red); color: white; border: none; padding: 15px 30px; font-size: 1.1em; border-radius: 30px; margin-top: 15px; cursor: pointer; display: none; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
-
     <div class="game-container">
         <div class="brand">GROUNDED AND FREE</div>
         <h1 id="phaseTitle">Barista Pro</h1>
         <p id="instructions">Phase 1: Tap to pull a <b>Perfect Shot</b></p>
-
         <canvas id="gameCanvas" width="400" height="400"></canvas>
-
         <div id="msg">WAITING FOR TAMP...</div>
-        <button id="nextBtn">Next Phase ➔</button>
+        <button id="nextBtn">NEXT PHASE ➔</button>
     </div>
 
 <script>
@@ -33,131 +30,129 @@
     const ctx = canvas.getContext('2d');
     const msg = document.getElementById('msg');
     const nextBtn = document.getElementById('nextBtn');
-    const phaseTitle = document.getElementById('phaseTitle');
-    const instructions = document.getElementById('instructions');
-
-    let phase = 1;
-    let running = true;
-    let angle = 0, speed = 0.05; // Phase 1 variables
-    let vortexLevel = 0, wandPos = {x: 200, y: 200}; // Phase 2 variables
+    
+    let phase = 1; let running = true;
+    let angle = 0, speed = 0.05;
+    let vortexLevel = 0;
+    let pitcherPos = {x: 200, y: 350}; // Start pitcher lower
+    let bubbles = [];
 
     function draw() {
         ctx.clearRect(0, 0, 400, 400);
-        
         if (phase === 1) {
             drawPhase1();
-        } else if (phase === 2) {
+        } else {
             drawPhase2();
         }
         requestAnimationFrame(draw);
     }
 
     function drawPhase1() {
-        // Gauge Background
         ctx.beginPath(); ctx.arc(200, 250, 140, Math.PI, 0);
-        ctx.lineWidth = 25; ctx.strokeStyle = '#eeeeee'; ctx.stroke();
-        // Gold Zone
+        ctx.lineWidth = 25; ctx.strokeStyle = '#444'; ctx.stroke();
         ctx.beginPath(); ctx.arc(200, 250, 140, -Math.PI + 1.3, -Math.PI + 1.7);
-        ctx.strokeStyle = varColor('--gold'); ctx.stroke();
-        // Needle
+        ctx.strokeStyle = '#e9b44c'; ctx.stroke();
         ctx.save(); ctx.translate(200, 250); ctx.rotate(-Math.PI + angle);
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(130, 0);
-        ctx.lineWidth = 8; ctx.lineCap = "round"; ctx.strokeStyle = varColor('--coffee'); ctx.stroke(); ctx.restore();
-
-        if (running) {
-            angle += speed;
-            if (angle > Math.PI || angle < 0) speed = -speed;
-        }
+        ctx.lineWidth = 8; ctx.lineCap = "round"; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.restore();
+        if (running) { angle += speed; if (angle > Math.PI || angle < 0) speed = -speed; }
     }
 
     function drawPhase2() {
-        // Draw Milk Pitcher (Top Down View)
-        ctx.beginPath(); ctx.arc(200, 200, 150, 0, Math.PI * 2);
-        ctx.fillStyle = "#ced4da"; ctx.fill();
-        ctx.lineWidth = 10; ctx.strokeStyle = "#adb5bd"; ctx.stroke();
+        // Draw Fixed Steam Wand (The "Target")
+        ctx.fillStyle = "#999";
+        ctx.fillRect(195, 0, 10, 150);
+        ctx.beginPath(); ctx.arc(200, 150, 8, 0, Math.PI*2); ctx.fill();
 
-        // Draw Milk
-        ctx.beginPath(); ctx.arc(200, 200, 140, 0, Math.PI * 2);
-        ctx.fillStyle = varColor('--milk'); ctx.fill();
+        // Draw Pitcher (Steel Circle)
+        ctx.save();
+        ctx.translate(pitcherPos.x, pitcherPos.y);
+        
+        // Pitcher Rim
+        ctx.beginPath(); ctx.arc(0, 0, 120, 0, Math.PI*2);
+        ctx.fillStyle = "#adb5bd"; ctx.fill();
+        ctx.strokeStyle = "#6c757d"; ctx.lineWidth = 8; ctx.stroke();
 
-        // Draw Vortex Visual
-        if (vortexLevel > 10) {
-            ctx.save(); ctx.translate(200, 200); ctx.rotate(Date.now() / 100);
-            ctx.beginPath(); ctx.arc(30, 0, 10 + (vortexLevel/10), 0, Math.PI * 2);
-            ctx.strokeStyle = "#e9ecef"; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
+        // Milk Surface
+        ctx.beginPath(); ctx.arc(0, 0, 110, 0, Math.PI*2);
+        ctx.fillStyle = "#ffffff"; ctx.fill();
+
+        // Check for Steam Wand interaction
+        let wandInMilkX = 200 - pitcherPos.x;
+        let wandInMilkY = 150 - pitcherPos.y;
+        let distFromCenter = Math.hypot(wandInMilkX, wandInMilkY);
+
+        if (running && distFromCenter < 110) {
+            // "Sweet Spot" is off-center for a vortex
+            if (distFromCenter > 60 && distFromCenter < 90) {
+                vortexLevel += 0.4;
+                msg.innerHTML = "🌀 PERFECT VORTEX! It's getting silky...";
+                msg.style.color = "green";
+                // Whirlpool lines
+                ctx.rotate(Date.now() / 100);
+                ctx.strokeStyle = "#e9ecef"; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(20, 0, 40, 0, Math.PI); ctx.stroke();
+            } else {
+                // Bubbles (Too deep or too centered)
+                msg.innerHTML = "TOO DEEP! Screaming/Bubbling...";
+                msg.style.color = "#a33b39";
+                if(Math.random() > 0.8) bubbles.push({x: wandInMilkX, y: wandInMilkY, r: 5});
+            }
         }
 
-        // Draw Steam Wand
-        ctx.beginPath(); ctx.arc(wandPos.x, wandPos.y, 15, 0, Math.PI * 2);
-        ctx.fillStyle = "#6c757d"; ctx.fill();
+        // Draw Bubbles
+        bubbles.forEach((b, i) => {
+            ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+            ctx.strokeStyle = "#dee2e6"; ctx.stroke();
+            b.r += 1; if(b.r > 20) bubbles.splice(i, 1);
+        });
 
-        // Logic for Vortex (Target is top-right quadrant)
-        if (running) {
-            let dist = Math.hypot(wandPos.x - 280, wandPos.y - 120);
-            if (dist < 40) {
-                vortexLevel += 0.5;
-                msg.innerHTML = "🌀 VORTEX ACHIEVED! Keep it spinning...";
-                msg.style.color = "green";
-            } else {
-                if (vortexLevel > 0) vortexLevel -= 0.2;
-                msg.innerHTML = "Move wand to the top-right edge!";
-                msg.style.color = varColor('--site-red');
-            }
+        ctx.restore();
 
-            if (vortexLevel >= 100) {
-                running = false;
-                msg.innerHTML = "✨ SILKY MICROFOAM! Ready to pour.";
-                msg.style.color = "green";
-                nextBtn.style.display = "inline-block";
-            }
+        if (vortexLevel >= 100) {
+            running = false;
+            msg.innerHTML = "✨ GLOSSY MICROFOAM ACHIEVED!";
+            nextBtn.style.display = "inline-block";
         }
     }
 
-    function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-
     function handleInput(e) {
-        if (!running) return;
         let rect = canvas.getBoundingClientRect();
-        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        let clientX = e.touches ? e.touches.clientX : e.clientX;
+        let clientY = e.touches ? e.touches.clientY : e.clientY;
         let x = (clientX - rect.left) * (400 / rect.width);
         let y = (clientY - rect.top) * (400 / rect.height);
 
-        if (phase === 1) {
-            checkShot();
-        } else {
-            wandPos = {x, y};
-        }
-    }
-
-    function checkShot() {
-        running = false;
-        if (angle >= 1.3 && angle <= 1.7) {
-            msg.innerHTML = "✨ PERFECT CREMA!";
-            msg.style.color = "green";
-            nextBtn.style.display = "inline-block";
-        } else {
-            msg.innerHTML = "TOO BITTER! Try again.";
-            setTimeout(() => { running = true; msg.innerHTML = "WAITING FOR TAMP..."; }, 1500);
+        if (phase === 1 && running) {
+            running = false;
+            if (angle >= 1.3 && angle <= 1.7) {
+                msg.innerHTML = "✨ PERFECT CREMA!";
+                nextBtn.style.display = "inline-block";
+            } else {
+                msg.innerHTML = "TOO BITTER! Try again.";
+                setTimeout(() => { running = true; }, 1500);
+            }
+        } else if (phase === 2 && running) {
+            pitcherPos = {x, y};
         }
     }
 
     nextBtn.onclick = () => {
         if (phase === 1) {
             phase = 2; running = true;
-            phaseTitle.innerHTML = "Milk Steamer";
-            instructions.innerHTML = "Phase 2: Drag wand to the edge for a <b>Vortex</b>";
+            document.getElementById('phaseTitle').innerHTML = "Milk Steamer";
+            document.getElementById('instructions').innerHTML = "Phase 2: Lift the <b>Pitcher</b> to the wand tip";
             nextBtn.style.display = "none";
-            msg.innerHTML = "Find the sweet spot!";
+            msg.innerHTML = "Find the whirlpool spot!";
         } else {
-            alert("Phase 3: The Pour is coming next!");
+            alert("Phase 3: The Pour coming soon!");
         }
     };
 
     canvas.addEventListener('mousedown', handleInput);
-    canvas.addEventListener('mousemove', (e) => { if(phase===2) handleInput(e); });
+    canvas.addEventListener('mousemove', (e) => { if(e.buttons > 0) handleInput(e); });
     canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); });
-    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); if(phase===2) handleInput(e); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleInput(e); });
     draw();
 </script>
 </body>
