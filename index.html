@@ -4,14 +4,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Grounded and Free Barista Pro</title>
     <style>
-        :root { --site-red: #a33b39; --cream: #f9f4e8; --coffee: #4e342e; }
-        body { text-align: center; font-family: sans-serif; background-color: var(--cream); color: var(--coffee); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; touch-action: none; overflow: hidden; position: fixed; width: 100%; height: 100%; }
-        .game-container { width: 100%; max-width: 350px; margin: 0 auto; }
-        h1 { font-size: 1.8em; margin: 5px 0; color: var(--site-red); text-transform: uppercase; }
-        .brand { font-weight: bold; color: var(--coffee); margin-top: 10px; letter-spacing: 1px; }
-        canvas { border: 6px solid var(--site-red); background: #222; border-radius: 20px; box-shadow: 0 8px 0 #7a2c2a; width: 100%; height: auto; touch-action: none; -webkit-user-select: none; }
-        #msg { font-weight: bold; font-size: 1.1em; margin-top: 15px; min-height: 25px; }
-        button { background-color: var(--site-red); color: white; border: none; padding: 15px 30px; font-size: 1.1em; border-radius: 30px; margin-top: 15px; cursor: pointer; display: none; }
+        :root { --site-red: #a33b39; --cream: #f9f4e8; --coffee: #4e342e; --sage: #8a9a5b; --terracotta: #d67d5c; }
+        body { 
+            text-align: center; font-family: 'Segoe UI', sans-serif; 
+            background-color: var(--cream); color: var(--coffee); 
+            margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; 
+            touch-action: none; overflow: hidden; position: fixed; width: 100%; height: 100%;
+            background-image: radial-gradient(var(--terracotta) 0.5px, transparent 0.5px); background-size: 20px 20px;
+        }
+        .game-container { width: 100%; max-width: 350px; margin: 0 auto; z-index: 2; }
+        h1 { font-size: 1.8em; margin: 5px 0; color: var(--site-red); text-transform: uppercase; text-shadow: 1px 1px var(--cream); }
+        .brand { font-weight: bold; color: var(--sage); margin-top: 10px; letter-spacing: 2px; font-size: 0.9em; }
+        canvas { border: 6px solid var(--site-red); background: #222; border-radius: 20px; box-shadow: 0 8px 0 var(--coffee); width: 100%; height: auto; touch-action: none; }
+        #msg { font-weight: bold; font-size: 1.1em; margin-top: 15px; min-height: 25px; color: var(--coffee); }
+        button { background-color: var(--sage); color: white; border: none; padding: 15px 30px; font-size: 1.1em; border-radius: 30px; margin-top: 15px; cursor: pointer; display: none; box-shadow: 0 4px 0 #5c683d; }
     </style>
 </head>
 <body>
@@ -31,113 +37,112 @@
     const nextBtn = document.getElementById('nextBtn');
     
     let phase = 1; let running = true;
-    let angle = 0, speed = 0.05;
-    let vortexLevel = 0;
-    let pitcherPos = {x: 200, y: 320}; 
-    let lastTouch = {x: 0, y: 0};
-    let bubbles = [];
+    let angle = 0, speed = 0.05; // P1
+    let vortexLevel = 0, pitcherPos = {x: 200, y: 320}, lastTouch = {x: 0, y: 0}; // P2
+    let fillLevel = 0, wiggle = 0, artStage = "sink"; // P3
 
     function draw() {
         ctx.clearRect(0, 0, 400, 400);
-        if (phase === 1) { drawPhase1(); } else { drawPhase2(); }
+        if (phase === 1) drawP1();
+        else if (phase === 2) drawP2();
+        else drawP3();
         requestAnimationFrame(draw);
     }
 
-    function drawPhase1() {
-        ctx.beginPath(); ctx.arc(200, 250, 140, Math.PI, 0);
+    function drawP1() {
+        ctx.beginPath(); ctx.arc(200, 200, 140, Math.PI, 0);
         ctx.lineWidth = 25; ctx.strokeStyle = '#444'; ctx.stroke();
-        ctx.beginPath(); ctx.arc(200, 250, 140, -Math.PI + 1.3, -Math.PI + 1.7);
+        ctx.beginPath(); ctx.arc(200, 200, 140, -Math.PI + 1.3, -Math.PI + 1.7);
         ctx.strokeStyle = '#e9b44c'; ctx.stroke();
-        ctx.save(); ctx.translate(200, 250); ctx.rotate(-Math.PI + angle);
+        ctx.save(); ctx.translate(200, 200); ctx.rotate(-Math.PI + angle);
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(130, 0);
         ctx.lineWidth = 8; ctx.lineCap = "round"; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.restore();
         if (running) { angle += speed; if (angle > Math.PI || angle < 0) speed = -speed; }
     }
 
-    function drawPhase2() {
-        // Wand
+    function drawP2() {
         ctx.fillStyle = "#999"; ctx.fillRect(195, 0, 10, 150);
         ctx.beginPath(); ctx.arc(200, 150, 8, 0, Math.PI*2); ctx.fill();
-
-        // Borders
         pitcherPos.x = Math.max(110, Math.min(290, pitcherPos.x));
         pitcherPos.y = Math.max(110, Math.min(350, pitcherPos.y));
-
-        ctx.save();
-        ctx.translate(pitcherPos.x, pitcherPos.y);
-        ctx.beginPath(); ctx.arc(0, 0, 120, 0, Math.PI*2);
-        ctx.fillStyle = "#adb5bd"; ctx.fill();
-        ctx.strokeStyle = "#6c757d"; ctx.lineWidth = 8; ctx.stroke();
-        ctx.beginPath(); ctx.arc(0, 0, 110, 0, Math.PI*2);
-        ctx.fillStyle = "#ffffff"; ctx.fill();
-
-        let wandInMilkX = 200 - pitcherPos.x;
-        let wandInMilkY = 150 - pitcherPos.y;
-        let dist = Math.hypot(wandInMilkX, wandInMilkY);
-
-        if (running && dist < 105) {
-            if (wandInMilkX > 30 && wandInMilkY < -30) {
-                vortexLevel += 0.5;
-                msg.innerHTML = "🌀 VORTEX ACHIEVED!"; msg.style.color = "green";
-                ctx.rotate(Date.now() / 80); ctx.strokeStyle = "#e9ecef"; ctx.lineWidth = 4;
-                ctx.beginPath(); ctx.arc(25, 0, 45, 0, Math.PI); ctx.stroke();
-            } else {
-                msg.innerHTML = "TOO DEEP! Big bubbles..."; msg.style.color = "#a33b39";
-                if(Math.random() > 0.8) bubbles.push({x: wandInMilkX, y: wandInMilkY, r: 5});
-            }
+        ctx.save(); ctx.translate(pitcherPos.x, pitcherPos.y);
+        ctx.beginPath(); ctx.arc(0, 0, 120, 0, Math.PI*2); ctx.fillStyle = "#adb5bd"; ctx.fill();
+        ctx.beginPath(); ctx.arc(0, 0, 110, 0, Math.PI*2); ctx.fillStyle = "#fff"; ctx.fill();
+        let dx = 200 - pitcherPos.x, dy = 150 - pitcherPos.y;
+        if (running && Math.hypot(dx, dy) < 105) {
+            if (dx > 30 && dy < -30) {
+                vortexLevel += 0.5; msg.innerHTML = "🌀 VORTEX!";
+                ctx.rotate(Date.now()/80); ctx.strokeStyle="#e9ecef"; ctx.beginPath(); ctx.arc(25, 0, 45, 0, Math.PI); ctx.stroke();
+            } else msg.innerHTML = "TOO DEEP!";
         }
-        bubbles.forEach((b, i) => {
-            ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-            ctx.strokeStyle = "#dee2e6"; ctx.stroke(); b.r += 1.5; if(b.r > 25) bubbles.splice(i, 1);
-        });
         ctx.restore();
+        if (vortexLevel >= 100) { running = false; msg.innerHTML = "✨ SILKY MILK!"; nextBtn.style.display = "block"; }
+    }
 
-        if (vortexLevel >= 100) { running = false; msg.innerHTML = "✨ SILKY MICROFOAM READY!"; nextBtn.style.display = "inline-block"; }
+    function drawP3() {
+        // Draw Mug
+        ctx.beginPath(); ctx.arc(200, 200, 150, 0, Math.PI*2);
+        ctx.fillStyle = "#4e342e"; ctx.fill(); // Crema base
+        
+        // Draw Fill Level
+        ctx.beginPath(); ctx.arc(200, 200, 140 * (fillLevel/100), 0, Math.PI*2);
+        ctx.fillStyle = artStage === "sink" ? "#6f4e37" : "#fff"; ctx.fill();
+
+        if (running) {
+            if (artStage === "sink") {
+                if (pitcherPos.y < 150) { fillLevel += 0.5; msg.innerHTML = "POURING HIGH: Filling base..."; }
+                else msg.innerHTML = "LOWER IT to start the art!";
+                if (fillLevel >= 50) artStage = "drop";
+            } else {
+                if (pitcherPos.y > 250) {
+                    fillLevel += 0.5; msg.innerHTML = "WIGGLE for the heart! ❤️";
+                    wiggle = Math.sin(Date.now()/100) * 20;
+                    ctx.beginPath(); ctx.arc(200+wiggle, 180, 40, 0, Math.PI*2); ctx.fillStyle = "#fff"; ctx.fill();
+                } else msg.innerHTML = "GET CLOSER to the surface!";
+            }
+            if (fillLevel >= 100) { running = false; msg.innerHTML = "☕ ART COMPLETE! Stay Grounded."; nextBtn.style.display = "block"; nextBtn.innerHTML = "PLAY AGAIN"; }
+        }
+        // Draw Pitcher Preview
+        ctx.beginPath(); ctx.arc(pitcherPos.x, pitcherPos.y, 40, 0, Math.PI*2);
+        ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.fill();
     }
 
     function handleStart(e) {
-        if (!running) return;
+        if (!running && phase < 3) return;
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        lastTouch = { x: (clientX - rect.left), y: (clientY - rect.top) };
-
-        if (phase === 1) {
+        const clientX = e.touches ? e.touches.clientX : e.clientX;
+        const clientY = e.touches ? e.touches.clientY : e.clientY;
+        lastTouch = { x: clientX - rect.left, y: clientY - rect.top };
+        if (phase === 1 && running) {
             running = false;
-            if (angle >= 1.3 && angle <= 1.7) { msg.innerHTML = "✨ PERFECT CREMA!"; nextBtn.style.display = "inline-block"; }
-            else { msg.innerHTML = "TOO BITTER! Try again."; setTimeout(() => { running = true; }, 1500); }
+            if (angle >= 1.3 && angle <= 1.7) { msg.innerHTML = "✨ PERFECT SHOT!"; nextBtn.style.display = "block"; }
+            else setTimeout(() => { running = true; }, 1500);
         }
     }
 
     function handleMove(e) {
-        if (phase === 2 && running) {
+        if (phase >= 2 && running) {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            const currentTouch = { x: (clientX - rect.left), y: (clientY - rect.top) };
-            
-            // Move based on the difference (delta)
-            pitcherPos.x += (currentTouch.x - lastTouch.x);
-            pitcherPos.y += (currentTouch.y - lastTouch.y);
-            lastTouch = currentTouch;
+            const clientX = e.touches ? e.touches.clientX : e.clientX;
+            const clientY = e.touches ? e.touches.clientY : e.clientY;
+            const current = { x: clientX - rect.left, y: clientY - rect.top };
+            pitcherPos.x += (current.x - lastTouch.x);
+            pitcherPos.y += (current.y - lastTouch.y);
+            lastTouch = current;
         }
     }
 
     nextBtn.onclick = () => {
-        if (phase === 1) {
-            phase = 2; running = true;
-            document.getElementById('phaseTitle').innerHTML = "Milk Steamer";
-            document.getElementById('instructions').innerHTML = "Phase 2: Lift <b>Pitcher</b> to the wand tip";
-            nextBtn.style.display = "none";
-            msg.innerHTML = "Position wand at the 2 o'clock edge!";
-        } else { alert("Phase 3: The Pour coming soon!"); }
+        if (phase === 1) { phase = 2; running = true; nextBtn.style.display="none"; instructions.innerHTML="Phase 2: Create a <b>Vortex</b>"; }
+        else if (phase === 2) { phase = 3; running = true; fillLevel = 0; pitcherPos = {x:200, y:100}; nextBtn.style.display="none"; instructions.innerHTML="Phase 3: High to sink, Low to <b>Draw</b>"; }
+        else location.reload();
     };
 
+    canvas.addEventListener('touchstart', handleStart, {passive:false});
+    canvas.addEventListener('touchmove', handleMove, {passive:false});
     canvas.addEventListener('mousedown', handleStart);
     window.addEventListener('mousemove', (e) => { if(e.buttons > 0) handleMove(e); });
-    canvas.addEventListener('touchstart', handleStart, {passive: false});
-    canvas.addEventListener('touchmove', handleMove, {passive: false});
     draw();
 </script>
 </body>
