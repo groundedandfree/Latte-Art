@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Grounded and Free Barista Pro</title>
     <style>
-        :root { --site-red: #a33b39; --cream: #f9f4e8; --coffee: #4e342e; --steel: #ced4da; --milk: #ffffff; }
+        :root { --site-red: #a33b39; --cream: #f9f4e8; --coffee: #4e342e; }
         body { text-align: center; font-family: sans-serif; background-color: var(--cream); color: var(--coffee); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; touch-action: none; overflow: hidden; }
         .game-container { width: 100%; max-width: 350px; margin: 0 auto; }
         h1 { font-size: 1.8em; margin: 5px 0; color: var(--site-red); text-transform: uppercase; }
@@ -34,7 +34,7 @@
     let phase = 1; let running = true;
     let angle = 0, speed = 0.05;
     let vortexLevel = 0;
-    let pitcherPos = {x: 200, y: 350}; // Start pitcher lower
+    let pitcherPos = {x: 200, y: 320}; // Centered at bottom
     let bubbles = [];
 
     function draw() {
@@ -59,67 +59,66 @@
     }
 
     function drawPhase2() {
-        // Draw Fixed Steam Wand (The "Target")
+        // Steam Wand
         ctx.fillStyle = "#999";
         ctx.fillRect(195, 0, 10, 150);
         ctx.beginPath(); ctx.arc(200, 150, 8, 0, Math.PI*2); ctx.fill();
 
-        // Draw Pitcher (Steel Circle)
+        // Pitcher Boundary Check (Stops it from going off-screen)
+        pitcherPos.x = Math.max(80, Math.min(320, pitcherPos.x));
+        pitcherPos.y = Math.max(100, Math.min(350, pitcherPos.y));
+
         ctx.save();
         ctx.translate(pitcherPos.x, pitcherPos.y);
         
-        // Pitcher Rim
+        // Steel Rim
         ctx.beginPath(); ctx.arc(0, 0, 120, 0, Math.PI*2);
         ctx.fillStyle = "#adb5bd"; ctx.fill();
         ctx.strokeStyle = "#6c757d"; ctx.lineWidth = 8; ctx.stroke();
 
-        // Milk Surface
+        // Milk
         ctx.beginPath(); ctx.arc(0, 0, 110, 0, Math.PI*2);
         ctx.fillStyle = "#ffffff"; ctx.fill();
 
-        // Check for Steam Wand interaction
         let wandInMilkX = 200 - pitcherPos.x;
         let wandInMilkY = 150 - pitcherPos.y;
         let distFromCenter = Math.hypot(wandInMilkX, wandInMilkY);
 
         if (running && distFromCenter < 110) {
-            // "Sweet Spot" is off-center for a vortex
-            if (distFromCenter > 60 && distFromCenter < 90) {
-                vortexLevel += 0.4;
-                msg.innerHTML = "🌀 PERFECT VORTEX! It's getting silky...";
+            // Sweet Spot is 2 o'clock position in the pitcher
+            if (wandInMilkX > 30 && wandInMilkY < -30 && distFromCenter < 90) {
+                vortexLevel += 0.5;
+                msg.innerHTML = "🌀 VORTEX ACHIEVED! Smooth as silk.";
                 msg.style.color = "green";
-                // Whirlpool lines
-                ctx.rotate(Date.now() / 100);
-                ctx.strokeStyle = "#e9ecef"; ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.arc(20, 0, 40, 0, Math.PI); ctx.stroke();
+                ctx.rotate(Date.now() / 80);
+                ctx.strokeStyle = "#e9ecef"; ctx.lineWidth = 4;
+                ctx.beginPath(); ctx.arc(25, 0, 45, 0, Math.PI); ctx.stroke();
             } else {
-                // Bubbles (Too deep or too centered)
-                msg.innerHTML = "TOO DEEP! Screaming/Bubbling...";
+                msg.innerHTML = "TOO DEEP! Big bubbles forming...";
                 msg.style.color = "#a33b39";
                 if(Math.random() > 0.8) bubbles.push({x: wandInMilkX, y: wandInMilkY, r: 5});
             }
         }
 
-        // Draw Bubbles
         bubbles.forEach((b, i) => {
             ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
             ctx.strokeStyle = "#dee2e6"; ctx.stroke();
-            b.r += 1; if(b.r > 20) bubbles.splice(i, 1);
+            b.r += 1.5; if(b.r > 25) bubbles.splice(i, 1);
         });
 
         ctx.restore();
 
         if (vortexLevel >= 100) {
             running = false;
-            msg.innerHTML = "✨ GLOSSY MICROFOAM ACHIEVED!";
+            msg.innerHTML = "✨ SILKY MICROFOAM READY!";
             nextBtn.style.display = "inline-block";
         }
     }
 
     function handleInput(e) {
         let rect = canvas.getBoundingClientRect();
-        let clientX = e.touches ? e.touches.clientX : e.clientX;
-        let clientY = e.touches ? e.touches.clientY : e.clientY;
+        let clientX = (e.touches ? e.touches[0].clientX : e.clientX);
+        let clientY = (e.touches ? e.touches[0].clientY : e.clientY);
         let x = (clientX - rect.left) * (400 / rect.width);
         let y = (clientY - rect.top) * (400 / rect.height);
 
@@ -141,11 +140,11 @@
         if (phase === 1) {
             phase = 2; running = true;
             document.getElementById('phaseTitle').innerHTML = "Milk Steamer";
-            document.getElementById('instructions').innerHTML = "Phase 2: Lift the <b>Pitcher</b> to the wand tip";
+            document.getElementById('instructions').innerHTML = "Phase 2: Lift <b>Pitcher</b> to the wand tip";
             nextBtn.style.display = "none";
-            msg.innerHTML = "Find the whirlpool spot!";
+            msg.innerHTML = "Position wand at the 2 o'clock edge!";
         } else {
-            alert("Phase 3: The Pour coming soon!");
+            alert("Phase 3: The Pour is coming next!");
         }
     };
 
