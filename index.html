@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Barista Pro - Phase 1</title>
+    <style>
+        body { text-align: center; font-family: sans-serif; background: #f4ece1; color: #4e342e; }
+        canvas { border: 5px solid #4e342e; background: #fff; cursor: pointer; border-radius: 50% 50% 0 0; }
+        .ui { margin-top: 15px; }
+        #msg { font-weight: bold; font-size: 1.4em; height: 30px; }
+    </style>
+</head>
+<body>
+    <h1>Barista Pro: The Perfect Shot</h1>
+    <p>Tap when the needle is in the <b>Gold Zone</b> for a 28s extraction!</p>
+    <canvas id="gameCanvas" width="400" height="300"></canvas>
+    <div class="ui">
+        <div id="msg">TAP TO PULL SHOT</div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let angle = 0, speed = 0.04, running = true;
+
+    function draw() {
+        ctx.clearRect(0, 0, 400, 300);
+        // Meter Arc
+        ctx.beginPath(); ctx.arc(200, 250, 150, Math.PI, 0);
+        ctx.lineWidth = 30; ctx.strokeStyle = '#ddd'; ctx.stroke();
+        // Gold Zone
+        ctx.beginPath(); ctx.arc(200, 250, 150, -Math.PI + 1.3, -Math.PI + 1.7);
+        ctx.strokeStyle = '#ffd700'; ctx.stroke();
+        // Needle
+        ctx.save(); ctx.translate(200, 250); ctx.rotate(-Math.PI + angle);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(140, 0);
+        ctx.lineWidth = 6; ctx.strokeStyle = '#4e342e'; ctx.stroke(); ctx.restore();
+
+        if (running) {
+            angle += speed;
+            if (angle > Math.PI || angle < 0) speed = -speed;
+        }
+        requestAnimationFrame(draw);
+    }
+
+    function checkShot() {
+        if (!running) return;
+        running = false;
+        if (angle >= 1.3 && angle <= 1.7) {
+            document.getElementById('msg').innerHTML = "☕ PERFECT SHOT! (28s)";
+            document.getElementById('msg').style.color = "green";
+        } else {
+            document.getElementById('msg').innerHTML = "FAILED: Too Bitter!";
+            document.getElementById('msg').style.color = "red";
+            setTimeout(() => { running = true; document.getElementById('msg').style.color = "#4e342e"; }, 1500);
+        }
+    }
+    canvas.addEventListener('mousedown', checkShot);
+    draw();
+</script>
+</body>
+</html>
