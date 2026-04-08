@@ -1,100 +1,90 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Grounded and Free Barista Pro</title>
     <style>
-        /* Hippie / Earthy Aesthetic */
         :root {
+            --site-red: #a33b39; /* Matches your site header */
             --cream: #f9f4e8;
-            --terracotta: #d67d5c;
-            --sage: #8a9a5b;
             --coffee: #4e342e;
             --gold: #e9b44c;
         }
 
         body { 
             text-align: center; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: sans-serif; 
             background-color: var(--cream); 
             color: var(--coffee); 
             margin: 0; 
-            padding: 20px;
-            /* Decorative Boho Patterns */
-            background-image: radial-gradient(var(--terracotta) 0.5px, transparent 0.5px);
-            background-size: 20px 20px;
-            background-opacity: 0.1;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .header {
-            margin-bottom: 20px;
+        /* This container prevents the "zoomed in" look */
+        .game-container {
+            width: 100%;
+            max-width: 350px; /* Fits perfectly on most phones */
+            margin: 0 auto;
         }
 
         h1 { 
-            font-size: 2em; 
-            margin: 0; 
-            letter-spacing: 2px;
-            color: var(--terracotta);
-            text-shadow: 1px 1px 0px var(--cream), 2px 2px 0px var(--coffee);
+            font-size: 1.8em; 
+            margin: 5px 0; 
+            color: var(--site-red);
+            text-transform: uppercase;
         }
 
         .brand {
-            font-style: italic;
             font-weight: bold;
-            color: var(--sage);
-            margin-bottom: 10px;
+            color: var(--coffee);
+            margin-top: 10px;
+            letter-spacing: 1px;
         }
 
         canvas { 
-            border: 8px solid var(--terracotta); 
+            border: 6px solid var(--site-red); 
             background: #fff; 
             cursor: pointer; 
-            border-radius: 50% 50% 15px 15px; /* Rounded top like a coffee pod */
-            box-shadow: 0 10px 0 var(--coffee);
-            max-width: 90%;
+            border-radius: 20px;
+            box-shadow: 0 8px 0 #7a2c2a;
+            width: 100%; /* Scales to the container */
             height: auto; 
         }
 
-        .ui { margin-top: 25px; }
-
         #msg { 
             font-weight: bold; 
-            font-size: 1.4em; 
-            height: 40px;
-            padding: 10px;
-            border-radius: 10px;
+            font-size: 1.1em; 
+            margin-top: 15px;
+            min-height: 25px;
         }
 
         button {
-            background-color: var(--sage);
+            background-color: var(--site-red);
             color: white;
             border: none;
-            padding: 15px 30px;
-            font-size: 1.1em;
-            border-radius: 50px;
-            cursor: pointer;
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 30px;
             margin-top: 10px;
-            display: none; /* Hidden until perfect shot */
-            box-shadow: 0 4px 0 #5c683d;
+            display: none;
+            cursor: pointer;
         }
-
-        button:active { transform: translateY(2px); box-shadow: 0 2px 0 #5c683d; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="brand">Grounded and Free</div>
+    <div class="game-container">
+        <div class="brand">GROUNDED AND FREE</div>
         <h1>Barista Pro</h1>
-    </div>
+        <p style="font-size: 0.9em;">Phase 1: Tap to pull a <b>Perfect Shot</b></p>
 
-    <p>Phase 1: The Soul of the Cup<br>Tap to pull a <b>Perfect Espresso Shot</b></p>
+        <canvas id="gameCanvas" width="400" height="300"></canvas>
 
-    <canvas id="gameCanvas" width="400" height="300"></canvas>
-
-    <div class="ui">
         <div id="msg">WAITING FOR TAMP...</div>
-        <button id="nextBtn" onclick="nextPhase()">Proceed to Steaming ➔</button>
+        <button id="nextBtn" onclick="alert('Phase 2 Loading...')">Next: Steam Milk ➔</button>
     </div>
 
 <script>
@@ -105,15 +95,11 @@
     function draw() {
         ctx.clearRect(0, 0, 400, 300);
         
-        // Stylish Background Circle for Meter
-        ctx.beginPath(); ctx.arc(200, 250, 160, Math.PI, 0);
-        ctx.fillStyle = '#fdfbf7'; ctx.fill();
-
-        // Meter Arc (The Gauge)
+        // Gauge Background
         ctx.beginPath(); ctx.arc(200, 250, 140, Math.PI, 0);
-        ctx.lineWidth = 25; ctx.strokeStyle = '#e0e0e0'; ctx.stroke();
+        ctx.lineWidth = 25; ctx.strokeStyle = '#eeeeee'; ctx.stroke();
 
-        // Hippie Gold Zone
+        // Gold Zone
         ctx.beginPath(); ctx.arc(200, 250, 140, -Math.PI + 1.3, -Math.PI + 1.7);
         ctx.strokeStyle = '#e9b44c'; ctx.stroke();
 
@@ -133,24 +119,19 @@
     function checkShot() {
         if (!running) return;
         running = false;
-        const msg = document.getElementById('msg');
         if (angle >= 1.3 && angle <= 1.7) {
-            msg.innerHTML = "✨ PURE MAGIC! Perfect Crema.";
-            msg.style.color = "#8a9a5b";
+            document.getElementById('msg').innerHTML = "✨ PERFECT CREMA!";
+            document.getElementById('msg').style.color = "green";
             document.getElementById('nextBtn').style.display = "inline-block";
         } else {
-            msg.innerHTML = "TOO BITTER... Try Again, Friend.";
-            msg.style.color = "#d67d5c";
+            document.getElementById('msg').innerHTML = "TOO BITTER! Try again.";
+            document.getElementById('msg').style.color = "#a33b39";
             setTimeout(() => { 
                 running = true; 
-                msg.innerHTML = "WAITING FOR TAMP..."; 
-                msg.style.color = "#4e342e"; 
+                document.getElementById('msg').innerHTML = "WAITING FOR TAMP...";
+                document.getElementById('msg').style.color = "#4e342e";
             }, 1500);
         }
-    }
-
-    function nextPhase() {
-        alert("Phase 2: Milk Steaming is coming next! Save this file to your GitHub now.");
     }
 
     canvas.addEventListener('mousedown', checkShot);
