@@ -5,14 +5,13 @@
     <title>Grounded and Free Barista Pro</title>
     <style>
         :root { --site-red: #a33b39; --cream: #f9f4e8; --coffee: #4e342e; }
-        body { text-align: center; font-family: sans-serif; background-color: var(--cream); color: var(--coffee); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; touch-action: none; overflow: hidden; }
+        body { text-align: center; font-family: sans-serif; background-color: var(--cream); color: var(--coffee); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; touch-action: none; overflow: hidden; position: fixed; width: 100%; height: 100%; }
         .game-container { width: 100%; max-width: 350px; margin: 0 auto; }
         h1 { font-size: 1.8em; margin: 5px 0; color: var(--site-red); text-transform: uppercase; }
         .brand { font-weight: bold; color: var(--coffee); margin-top: 10px; letter-spacing: 1px; }
-        canvas { border: 6px solid var(--site-red); background: #222; border-radius: 20px; box-shadow: 0 8px 0 #7a2c2a; width: 100%; height: auto; touch-action: none; }
+        canvas { border: 6px solid var(--site-red); background: #222; border-radius: 20px; box-shadow: 0 8px 0 #7a2c2a; width: 100%; height: auto; touch-action: none; -webkit-user-select: none; }
         #msg { font-weight: bold; font-size: 1.1em; margin-top: 15px; min-height: 25px; }
-        button { background-color: var(--site-red); color: white; border: none; padding: 15px 30px; font-size: 1.1em; border-radius: 30px; margin-top: 15px; cursor: pointer; display: none; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        button { background-color: var(--site-red); color: white; border: none; padding: 15px 30px; font-size: 1.1em; border-radius: 30px; margin-top: 15px; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
@@ -34,16 +33,13 @@
     let phase = 1; let running = true;
     let angle = 0, speed = 0.05;
     let vortexLevel = 0;
-    let pitcherPos = {x: 200, y: 320}; // Centered at bottom
+    let pitcherPos = {x: 200, y: 320}; 
+    let lastTouch = {x: 0, y: 0};
     let bubbles = [];
 
     function draw() {
         ctx.clearRect(0, 0, 400, 400);
-        if (phase === 1) {
-            drawPhase1();
-        } else {
-            drawPhase2();
-        }
+        if (phase === 1) { drawPhase1(); } else { drawPhase2(); }
         requestAnimationFrame(draw);
     }
 
@@ -59,80 +55,72 @@
     }
 
     function drawPhase2() {
-        // Steam Wand
-        ctx.fillStyle = "#999";
-        ctx.fillRect(195, 0, 10, 150);
+        // Wand
+        ctx.fillStyle = "#999"; ctx.fillRect(195, 0, 10, 150);
         ctx.beginPath(); ctx.arc(200, 150, 8, 0, Math.PI*2); ctx.fill();
 
-        // Pitcher Boundary Check (Stops it from going off-screen)
-        pitcherPos.x = Math.max(80, Math.min(320, pitcherPos.x));
-        pitcherPos.y = Math.max(100, Math.min(350, pitcherPos.y));
+        // Borders
+        pitcherPos.x = Math.max(110, Math.min(290, pitcherPos.x));
+        pitcherPos.y = Math.max(110, Math.min(350, pitcherPos.y));
 
         ctx.save();
         ctx.translate(pitcherPos.x, pitcherPos.y);
-        
-        // Steel Rim
         ctx.beginPath(); ctx.arc(0, 0, 120, 0, Math.PI*2);
         ctx.fillStyle = "#adb5bd"; ctx.fill();
         ctx.strokeStyle = "#6c757d"; ctx.lineWidth = 8; ctx.stroke();
-
-        // Milk
         ctx.beginPath(); ctx.arc(0, 0, 110, 0, Math.PI*2);
         ctx.fillStyle = "#ffffff"; ctx.fill();
 
         let wandInMilkX = 200 - pitcherPos.x;
         let wandInMilkY = 150 - pitcherPos.y;
-        let distFromCenter = Math.hypot(wandInMilkX, wandInMilkY);
+        let dist = Math.hypot(wandInMilkX, wandInMilkY);
 
-        if (running && distFromCenter < 110) {
-            // Sweet Spot is 2 o'clock position in the pitcher
-            if (wandInMilkX > 30 && wandInMilkY < -30 && distFromCenter < 90) {
+        if (running && dist < 105) {
+            if (wandInMilkX > 30 && wandInMilkY < -30) {
                 vortexLevel += 0.5;
-                msg.innerHTML = "🌀 VORTEX ACHIEVED! Smooth as silk.";
-                msg.style.color = "green";
-                ctx.rotate(Date.now() / 80);
-                ctx.strokeStyle = "#e9ecef"; ctx.lineWidth = 4;
+                msg.innerHTML = "🌀 VORTEX ACHIEVED!"; msg.style.color = "green";
+                ctx.rotate(Date.now() / 80); ctx.strokeStyle = "#e9ecef"; ctx.lineWidth = 4;
                 ctx.beginPath(); ctx.arc(25, 0, 45, 0, Math.PI); ctx.stroke();
             } else {
-                msg.innerHTML = "TOO DEEP! Big bubbles forming...";
-                msg.style.color = "#a33b39";
+                msg.innerHTML = "TOO DEEP! Big bubbles..."; msg.style.color = "#a33b39";
                 if(Math.random() > 0.8) bubbles.push({x: wandInMilkX, y: wandInMilkY, r: 5});
             }
         }
-
         bubbles.forEach((b, i) => {
             ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-            ctx.strokeStyle = "#dee2e6"; ctx.stroke();
-            b.r += 1.5; if(b.r > 25) bubbles.splice(i, 1);
+            ctx.strokeStyle = "#dee2e6"; ctx.stroke(); b.r += 1.5; if(b.r > 25) bubbles.splice(i, 1);
         });
-
         ctx.restore();
 
-        if (vortexLevel >= 100) {
+        if (vortexLevel >= 100) { running = false; msg.innerHTML = "✨ SILKY MICROFOAM READY!"; nextBtn.style.display = "inline-block"; }
+    }
+
+    function handleStart(e) {
+        if (!running) return;
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        lastTouch = { x: (clientX - rect.left), y: (clientY - rect.top) };
+
+        if (phase === 1) {
             running = false;
-            msg.innerHTML = "✨ SILKY MICROFOAM READY!";
-            nextBtn.style.display = "inline-block";
+            if (angle >= 1.3 && angle <= 1.7) { msg.innerHTML = "✨ PERFECT CREMA!"; nextBtn.style.display = "inline-block"; }
+            else { msg.innerHTML = "TOO BITTER! Try again."; setTimeout(() => { running = true; }, 1500); }
         }
     }
 
-    function handleInput(e) {
-        let rect = canvas.getBoundingClientRect();
-        let clientX = (e.touches ? e.touches[0].clientX : e.clientX);
-        let clientY = (e.touches ? e.touches[0].clientY : e.clientY);
-        let x = (clientX - rect.left) * (400 / rect.width);
-        let y = (clientY - rect.top) * (400 / rect.height);
-
-        if (phase === 1 && running) {
-            running = false;
-            if (angle >= 1.3 && angle <= 1.7) {
-                msg.innerHTML = "✨ PERFECT CREMA!";
-                nextBtn.style.display = "inline-block";
-            } else {
-                msg.innerHTML = "TOO BITTER! Try again.";
-                setTimeout(() => { running = true; }, 1500);
-            }
-        } else if (phase === 2 && running) {
-            pitcherPos = {x, y};
+    function handleMove(e) {
+        if (phase === 2 && running) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const currentTouch = { x: (clientX - rect.left), y: (clientY - rect.top) };
+            
+            // Move based on the difference (delta)
+            pitcherPos.x += (currentTouch.x - lastTouch.x);
+            pitcherPos.y += (currentTouch.y - lastTouch.y);
+            lastTouch = currentTouch;
         }
     }
 
@@ -143,15 +131,13 @@
             document.getElementById('instructions').innerHTML = "Phase 2: Lift <b>Pitcher</b> to the wand tip";
             nextBtn.style.display = "none";
             msg.innerHTML = "Position wand at the 2 o'clock edge!";
-        } else {
-            alert("Phase 3: The Pour is coming next!");
-        }
+        } else { alert("Phase 3: The Pour coming soon!"); }
     };
 
-    canvas.addEventListener('mousedown', handleInput);
-    canvas.addEventListener('mousemove', (e) => { if(e.buttons > 0) handleInput(e); });
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); });
-    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleInput(e); });
+    canvas.addEventListener('mousedown', handleStart);
+    window.addEventListener('mousemove', (e) => { if(e.buttons > 0) handleMove(e); });
+    canvas.addEventListener('touchstart', handleStart, {passive: false});
+    canvas.addEventListener('touchmove', handleMove, {passive: false});
     draw();
 </script>
 </body>
